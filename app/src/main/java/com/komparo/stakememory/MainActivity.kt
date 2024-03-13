@@ -9,6 +9,7 @@ import android.view.View
 import android.view.Window
 import android.view.animation.Animation
 import android.view.animation.ScaleAnimation
+import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -72,6 +73,9 @@ class MainActivity : AppCompatActivity() {
             editor?.putString("name", binding.tvPlayerName.text as String)
             editor?.putString("key", key)
             editor?.apply()
+            hideSystemUI()
+            val ims = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            ims.hideSoftInputFromWindow(binding.etEnterName.windowToken, 0)
         }
         Glide.with(this).asGif().load(R.drawable.fingerclick).into(binding.ivFingerClick)
         Glide.with(this).asGif().load(R.drawable.fingerclick).into(binding.ivLevelsClick)

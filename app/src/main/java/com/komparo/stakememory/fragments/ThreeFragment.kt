@@ -80,7 +80,7 @@ class ThreeFragment : Fragment() {
         "hash": "$key",
         "data": {
             "name": "$name",
-            "light": "$count"
+            "level1": "$count"
         }
     }
         """.trimIndent()

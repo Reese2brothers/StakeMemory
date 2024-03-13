@@ -82,7 +82,7 @@ class FourFragment : Fragment() {
         "hash": "$key",
         "data": {
             "name": "$name",
-            "medium": "$count"
+            "level2": "$count"
         }
     }
         """.trimIndent()

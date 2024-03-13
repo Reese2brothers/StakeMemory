@@ -84,7 +84,7 @@ class FiveFragment : Fragment() {
         "hash": "$key",
         "data": {
             "name": "$name",
-            "strong": "$count"
+            "level3": "$count"
         } 
     }
         """.trimIndent()
