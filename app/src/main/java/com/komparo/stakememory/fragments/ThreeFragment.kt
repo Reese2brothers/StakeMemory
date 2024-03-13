@@ -1,6 +1,7 @@
 package com.komparo.stakememory.fragments
 
 import android.annotation.SuppressLint
+import android.content.SharedPreferences
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
@@ -9,6 +10,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.komparo.stakememory.FlipCardAnimation
 import com.komparo.stakememory.R
 import com.komparo.stakememory.databinding.FragmentThreeBinding
@@ -17,18 +20,24 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.IOException
 
 
 class ThreeFragment : Fragment() {
     private lateinit var binding : FragmentThreeBinding
     private var coroutineScope = CoroutineScope(Dispatchers.Main + Job())
     private var coroutine : Job? = null
-    private val listBack = listOf(R.drawable.bluepika, R.drawable.bluering, R.drawable.greeneightangle,
-        R.drawable.greenromb, R.drawable.redheart, R.drawable.redromb, R.drawable.violetfiveangle, R.drawable.violetkresta,
-        R.drawable.yellowring, R.drawable.yellowtriangle)
+    private val listBack = listOf(R.drawable.bluering, R.drawable.greeneightangle,
+        R.drawable.greenromb)
     private var getBackSymbol : Drawable.ConstantState? = null
     private var count = 0
     private var symbolCount = 0
+    private lateinit var sharedPreferences: SharedPreferences
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -40,6 +49,10 @@ class ThreeFragment : Fragment() {
     @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        sharedPreferences = activity?.getSharedPreferences("SaveName", AppCompatActivity.MODE_PRIVATE)!!
+        val name = sharedPreferences.getString("name", "default")
+        val key = sharedPreferences.getString("key", "default")
 
         binding.btStartGame.setOnClickListener {
             binding.btStartGame.visibility = View.GONE
@@ -57,14 +70,41 @@ class ThreeFragment : Fragment() {
             binding.ll3x3.visibility = View.GONE
             showSymbol()
             if (symbolCount != 0) {
-                //binding.tvSymbolCount.text = "Need open :  $symbolCount"
                 binding.btNext.isEnabled = false
-                //Log.d("TAG", "true : $symbolCount")
             }
-            //else {
-//                binding.btNext.isEnabled = false
-//                Log.d("TAG", "false : $symbolCount")
-//            }
+        }
+        binding.btSaveCount.setOnClickListener {
+            val client = OkHttpClient()
+            val json = """
+    {
+        "hash": "$key",
+        "data": {
+            "name": "$name",
+            "light": "$count"
+        }
+    }
+        """.trimIndent()
+
+            val body = json.toRequestBody("application/json; charset=utf-8".toMediaType())
+            val request = Request.Builder()
+                .url("https://stake-memory.store/apiV4-0xkey4ddjdf445egsgsas2/")
+                .post(body)
+                .build()
+            coroutineScope.launch(Dispatchers.IO) {
+                try {
+                    val response = client.newCall(request).execute()
+                    if (!response.isSuccessful) throw IOException("Unexpected code $response")
+
+                    withContext(Dispatchers.Main) {
+                        println(response.body?.string())
+                        Toast.makeText(requireActivity(), "Saved $count points", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        println(e.message)
+                    }
+                }
+            }
         }
     }
     @SuppressLint("SetTextI18n")
@@ -107,7 +147,6 @@ class ThreeFragment : Fragment() {
                 if (imageView.drawable.constantState == getBackSymbol) {
                     symbolCount++
                     binding.tvSymbolCount.text = "Need open :  $symbolCount"
-                    Log.d("TAG", "need : $symbolCount")
                     binding.btNext.isEnabled = false
                 }
                if(symbolCount == 0){
@@ -147,13 +186,11 @@ class ThreeFragment : Fragment() {
         }
         if (symbolCount == 0) {
             binding.btNext.isEnabled = true
-            Log.d("TAG", "true : $symbolCount")
         }
     }
     @SuppressLint("SetTextI18n")
     private fun showR2(){
-        val flip = FlipCardAnimation(requireActivity(), binding.ivR2, binding.ivS2)
-        flip.flip()
+        FlipCardAnimation(requireActivity(), binding.ivR2, binding.ivS2).flip()
         binding.ivR2.visibility = View.GONE
         if (getBackSymbol == binding.ivS2.drawable.constantState) {
             count++
@@ -173,13 +210,11 @@ class ThreeFragment : Fragment() {
         }
         if (symbolCount == 0) {
             binding.btNext.isEnabled = true
-            Log.d("TAG", "true : $symbolCount")
         }
     }
     @SuppressLint("SetTextI18n")
     private fun showR3(){
-        val flip = FlipCardAnimation(requireActivity(), binding.ivR3, binding.ivS3)
-        flip.flip()
+        FlipCardAnimation(requireActivity(), binding.ivR3, binding.ivS3).flip()
         binding.ivR3.visibility = View.GONE
         if(getBackSymbol == binding.ivS3.drawable.constantState){
             count++
@@ -199,13 +234,11 @@ class ThreeFragment : Fragment() {
         }
         if (symbolCount == 0) {
             binding.btNext.isEnabled = true
-            Log.d("TAG", "true : $symbolCount")
         }
     }
     @SuppressLint("SetTextI18n")
     private fun showR4(){
-        val flip = FlipCardAnimation(requireActivity(), binding.ivR4, binding.ivS4)
-        flip.flip()
+        FlipCardAnimation(requireActivity(), binding.ivR4, binding.ivS4).flip()
         binding.ivR4.visibility = View.GONE
         if(getBackSymbol == binding.ivS4.drawable.constantState){
             count++
@@ -225,13 +258,11 @@ class ThreeFragment : Fragment() {
         }
         if (symbolCount == 0) {
             binding.btNext.isEnabled = true
-            Log.d("TAG", "true : $symbolCount")
         }
     }
     @SuppressLint("SetTextI18n")
     private fun showR5(){
-        val flip = FlipCardAnimation(requireActivity(), binding.ivR5, binding.ivS5)
-        flip.flip()
+        FlipCardAnimation(requireActivity(), binding.ivR5, binding.ivS5).flip()
         binding.ivR5.visibility = View.GONE
         if(getBackSymbol == binding.ivS5.drawable.constantState){
             count++
@@ -251,13 +282,11 @@ class ThreeFragment : Fragment() {
         }
         if (symbolCount == 0) {
             binding.btNext.isEnabled = true
-            Log.d("TAG", "true : $symbolCount")
         }
     }
     @SuppressLint("SetTextI18n")
     private fun showR6(){
-        val flip = FlipCardAnimation(requireActivity(), binding.ivR6, binding.ivS6)
-        flip.flip()
+        FlipCardAnimation(requireActivity(), binding.ivR6, binding.ivS6).flip()
         binding.ivR6.visibility = View.GONE
         if(getBackSymbol == binding.ivS6.drawable.constantState){
             count++
@@ -277,13 +306,11 @@ class ThreeFragment : Fragment() {
         }
         if (symbolCount == 0) {
             binding.btNext.isEnabled = true
-            Log.d("TAG", "true : $symbolCount")
         }
     }
     @SuppressLint("SetTextI18n")
     private fun showR7(){
-        val flip = FlipCardAnimation(requireActivity(), binding.ivR7, binding.ivS7)
-        flip.flip()
+        FlipCardAnimation(requireActivity(), binding.ivR7, binding.ivS7).flip()
         binding.ivR7.visibility = View.GONE
         if(getBackSymbol == binding.ivS7.drawable.constantState){
             count++
@@ -303,13 +330,11 @@ class ThreeFragment : Fragment() {
         }
         if (symbolCount == 0) {
             binding.btNext.isEnabled = true
-            Log.d("TAG", "true : $symbolCount")
         }
     }
     @SuppressLint("SetTextI18n")
     private fun showR8(){
-        val flip = FlipCardAnimation(requireActivity(), binding.ivR8, binding.ivS8)
-        flip.flip()
+        FlipCardAnimation(requireActivity(), binding.ivR8, binding.ivS8).flip()
         binding.ivR8.visibility = View.GONE
         if(getBackSymbol == binding.ivS8.drawable.constantState){
             count++
@@ -329,13 +354,11 @@ class ThreeFragment : Fragment() {
         }
         if (symbolCount == 0) {
             binding.btNext.isEnabled = true
-            Log.d("TAG", "true : $symbolCount")
         }
     }
     @SuppressLint("SetTextI18n")
     private fun showR9(){
-        val flip = FlipCardAnimation(requireActivity(), binding.ivR9, binding.ivS9)
-        flip.flip()
+        FlipCardAnimation(requireActivity(), binding.ivR9, binding.ivS9).flip()
         binding.ivR9.visibility = View.GONE
         if(getBackSymbol == binding.ivS9.drawable.constantState){
             count++
@@ -355,7 +378,6 @@ class ThreeFragment : Fragment() {
         }
         if (symbolCount == 0) {
             binding.btNext.isEnabled = true
-            Log.d("TAG", "true : $symbolCount")
         }
     }
 }
